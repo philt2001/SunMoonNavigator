@@ -1,5 +1,7 @@
 package sunmoonnavigator.com;
 
+import java.util.Calendar;
+
 import android.os.Bundle;
 import android.app.Activity;
 import android.content.Intent;
@@ -12,6 +14,8 @@ import android.widget.Toast;
 public class MainActivity extends Activity {
 	
 	CanvasView canvasView;
+	private static int degreesPerHour = (360/12);
+	private static int minutesPerHour = (60);
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -37,9 +41,9 @@ public class MainActivity extends Activity {
 				// Launch the Activity using the intent
 				//startActivity(startNewMeterReading);
 				
-				canvasView.SetRotationAngle( 90 );
+				canvasView.SetRotationAngle( CalculateSunAngle() );
 				
-				Toast.makeText(getApplicationContext(),"Selected Sun mode",Toast.LENGTH_LONG).show();
+				Toast.makeText(getApplicationContext(),"Selected Sun mode with "+CalculateSunAngle()+"deg, timeToAngle = "+ConvertTimeToAngle(),Toast.LENGTH_LONG).show();
 				
 			}
 		}); 
@@ -70,4 +74,39 @@ public class MainActivity extends Activity {
 		return true;
 	}
 	
+	//Function to calculate the correct angle to set
+	//Returns 0deg at 12, 90deg at 3
+	private float ConvertTimeToAngle()
+	{
+		Calendar c = Calendar.getInstance(); 
+		int hour = c.get(Calendar.HOUR);
+		int minute = c.get(Calendar.MINUTE);
+		
+		float hourHandAngle_deg = (float)degreesPerHour * ((float)hour + ((float)minute/(float)minutesPerHour) );
+		return hourHandAngle_deg % 360;
+	}
+	
+	//Function to calculate the angle for the sun mode
+	//TODO: GMT only at the moment
+	private float CalculateSunAngle()
+	{
+		Calendar c = Calendar.getInstance(); 
+		boolean currentlyAM = ( c.get(Calendar.AM_PM) == Calendar.AM );
+		float referenceHour_deg = 30; //for Daylight Savings Time, set to 30
+		float diffAngle_deg, rotationAngle_deg;
+		if ( currentlyAM ) {
+			diffAngle_deg = ( referenceHour_deg - ConvertTimeToAngle() ) % 360;
+		}
+		else {
+			diffAngle_deg = ( -referenceHour_deg + ConvertTimeToAngle() ) % 360;
+		}
+		float halfDiffAngle_deg = diffAngle_deg / 2;
+		if ( currentlyAM ) {
+			rotationAngle_deg = ( referenceHour_deg - halfDiffAngle_deg ) % 360;
+		}
+		else {
+			rotationAngle_deg = ( referenceHour_deg + halfDiffAngle_deg ) % 360;
+		}
+		return rotationAngle_deg;
+	}
 }
