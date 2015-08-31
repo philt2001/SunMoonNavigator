@@ -1,6 +1,8 @@
 package sunmoonnavigator.com;
 
+import java.sql.Date;
 import java.util.Calendar;
+import java.util.TimeZone;
 
 import android.os.Bundle;
 import android.app.Activity;
@@ -87,12 +89,23 @@ public class MainActivity extends Activity {
 	}
 	
 	//Function to calculate the angle for the sun mode
+	//Methods from: http://www.wikihow.com/Find-True-North-Without-a-Compass
+	//and: https://www.quora.com/How-can-you-navigate-using-the-Moon-as-a-guide
 	//TODO: GMT only at the moment
 	private float CalculateSunAngle()
 	{
 		Calendar c = Calendar.getInstance(); 
 		boolean currentlyAM = ( c.get(Calendar.AM_PM) == Calendar.AM );
-		float referenceHour_deg = 30; //for Daylight Savings Time, set to 30
+		boolean northernHemi_Flag = false; //from preference later
+		
+		//Check if in Daylight Saving Time
+		//References are now 1 instead of 12
+		//Note, new Date() should work, but is throwing an error for some reason
+		float referenceHour_deg = 0;
+		if ( TimeZone.getDefault().inDaylightTime( new Date( c.getTimeInMillis() ) ) ) {
+			referenceHour_deg = (float)degreesPerHour;
+		}
+		
 		float diffAngle_deg, rotationAngle_deg;
 		if ( currentlyAM ) {
 			diffAngle_deg = ( referenceHour_deg - ConvertTimeToAngle() ) % 360;
@@ -101,11 +114,27 @@ public class MainActivity extends Activity {
 			diffAngle_deg = ( -referenceHour_deg + ConvertTimeToAngle() ) % 360;
 		}
 		float halfDiffAngle_deg = diffAngle_deg / 2;
-		if ( currentlyAM ) {
-			rotationAngle_deg = ( referenceHour_deg - halfDiffAngle_deg ) % 360;
+		
+		//If northern hemisphere, then apply the half angle to the current hour
+		//If southern hemisphere, then apply the half angle to "12", the top of the phone
+		
+		if ( northernHemi_Flag )
+		{
+			if ( currentlyAM ) {
+				rotationAngle_deg = ( referenceHour_deg - halfDiffAngle_deg ) % 360;
+			}
+			else {
+				rotationAngle_deg = ( referenceHour_deg + halfDiffAngle_deg ) % 360;
+			}
 		}
-		else {
-			rotationAngle_deg = ( referenceHour_deg + halfDiffAngle_deg ) % 360;
+		else //Southern hemisphere
+		{
+			if ( currentlyAM ) {
+				rotationAngle_deg = ( 180 + halfDiffAngle_deg ) % 360;
+			}
+			else {
+				rotationAngle_deg = ( 180 - halfDiffAngle_deg ) % 360;
+			}
 		}
 		return rotationAngle_deg;
 	}
