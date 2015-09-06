@@ -49,7 +49,7 @@ public class MainActivity extends Activity {
 				
 				canvasView.SetRotationAngle( CalculateSunAngle() );
 				
-				Toast.makeText(getApplicationContext(),"Selected Sun mode with "+CalculateSunAngle()+"deg, timeToAngle = "+ConvertTimeToAngle(),Toast.LENGTH_LONG).show();
+				//Toast.makeText(getApplicationContext(),"Selected Sun mode with "+CalculateSunAngle()+"deg, timeToAngle = "+ConvertTimeToAngle(),Toast.LENGTH_LONG).show();
 				
 			}
 		}); 
@@ -91,30 +91,21 @@ public class MainActivity extends Activity {
 			return super.onOptionsItemSelected(item);
 		}
 	}
+
 	
-	//Function to calculate the correct angle to set
-	//Returns 0deg at 12, 90deg at 3
-	private float ConvertTimeToAngle()
+	//Function to calculate the correct angle for the current time
+	//This is relative to the "reference" time, either 12 (noon) for normal time
+	//or 1 (pm) for daylight saving time
+	//"before" (notionally morning) are negative angles that are need to get to the reference hour
+	//e.g. 11am in normal time is -30
+	//"after" (pm times) are positive angle past the reference hour
+	//e.g. 3pm in daylight saving is +60
+	private float ConvertTimeToRelativeAngleToRefernece()
 	{
 		Calendar c = Calendar.getInstance(); 
 		int hour = c.get(Calendar.HOUR);
 		int minute = c.get(Calendar.MINUTE);
-		
-		float hourHandAngle_deg = (float)degreesPerHour * ((float)hour + ((float)minute/(float)minutesPerHour) );
-		return hourHandAngle_deg % 360;
-	}
-	
-	//Function to calculate the angle for the sun mode
-	//Methods from: http://www.wikihow.com/Find-True-North-Without-a-Compass
-	//and: https://www.quora.com/How-can-you-navigate-using-the-Moon-as-a-guide
-	//TODO: GMT only at the moment
-	private float CalculateSunAngle()
-	{
-		Calendar c = Calendar.getInstance(); 
 		boolean currentlyAM = ( c.get(Calendar.AM_PM) == Calendar.AM );
-		
-		SharedPreferences prefs = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
-		boolean northernHemi_Flag = prefs.getBoolean(Pref_NorthHemi, true);
 		
 		//Check if in Daylight Saving Time
 		//References are now 1 instead of 12
@@ -124,36 +115,41 @@ public class MainActivity extends Activity {
 			referenceHour_deg = (float)degreesPerHour;
 		}
 		
-		float diffAngle_deg, rotationAngle_deg;
-		if ( currentlyAM ) {
-			diffAngle_deg = ( referenceHour_deg - ConvertTimeToAngle() ) % 360;
-		}
-		else {
-			diffAngle_deg = ( -referenceHour_deg + ConvertTimeToAngle() ) % 360;
-		}
-		float halfDiffAngle_deg = diffAngle_deg / 2;
+		//Calculate the angle of the hour hand
+		float hourHandAngle_deg = (float)degreesPerHour * ((float)hour + ((float)minute/(float)minutesPerHour) );
 		
-		//If northern hemisphere, then apply the half angle to the current hour
-		//If southern hemisphere, then apply the half angle to "12", the top of the phone
+		//Calculate the angle to the reference hour with the correct sign
+		float angleToRefHour_deg = hourHandAngle_deg - referenceHour_deg;
+		if ( currentlyAM ) { //take away 360 to be negative
+			angleToRefHour_deg -= 360;
+			if ( angleToRefHour_deg < -360 ) { //correct for daylight savings time around midnight
+				angleToRefHour_deg += 360;
+			}
+		}
 		
+		Toast.makeText(getApplicationContext(),"Time ("+hour+") to Ref Angle ("+referenceHour_deg+"): hour hand angle = " + hourHandAngle_deg + ", angle to ref hour = "+angleToRefHour_deg,Toast.LENGTH_LONG).show();
+		
+		return angleToRefHour_deg;
+	}
+	
+	//Function to calculate the angle for the sun mode
+	//Methods from: http://www.wikihow.com/Find-True-North-Without-a-Compass
+	//and: https://www.quora.com/How-can-you-navigate-using-the-Moon-as-a-guide
+	//TODO: GMT only at the moment
+	private float CalculateSunAngle()
+	{
+		SharedPreferences prefs = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
+		boolean northernHemi_Flag = prefs.getBoolean(Pref_NorthHemi, true);
+		
+		float halfDiffAngle_deg = ConvertTimeToRelativeAngleToRefernece() / 2;
+		
+		//Currently finding the angle between the reference and the hour hand
+		//If in the north, then this is south
+		//If in the south, then this is north
 		if ( northernHemi_Flag )
 		{
-			if ( currentlyAM ) {
-				rotationAngle_deg = ( referenceHour_deg - halfDiffAngle_deg ) % 360;
-			}
-			else {
-				rotationAngle_deg = ( referenceHour_deg + halfDiffAngle_deg ) % 360;
-			}
+			halfDiffAngle_deg += 180;
 		}
-		else //Southern hemisphere
-		{
-			if ( currentlyAM ) {
-				rotationAngle_deg = ( 180 + halfDiffAngle_deg ) % 360;
-			}
-			else {
-				rotationAngle_deg = ( 180 - halfDiffAngle_deg ) % 360;
-			}
-		}
-		return rotationAngle_deg;
+		return halfDiffAngle_deg;
 	}
 }
