@@ -40,7 +40,7 @@ public class CanvasView extends View {
 	//This is the angle that the arrow should be rotated clockwise from facing the top of the phone
 	public void SetRotationAngle( float angle_deg )
 	{
-		this.rotationAngle_deg = angle_deg;
+		this.rotationAngle_deg = angle_deg + 180; //angle of 0 faces the arrow to the bototm of the phone
 		invalidate(); //force a re-draw
 	}
 	 
