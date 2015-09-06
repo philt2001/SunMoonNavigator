@@ -7,7 +7,9 @@ import java.util.TimeZone;
 import android.os.Bundle;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -18,6 +20,8 @@ public class MainActivity extends Activity {
 	CanvasView canvasView;
 	private static int degreesPerHour = (360/12);
 	private static int minutesPerHour = (60);
+	public static final String MY_PREFS_NAME = "SunMoonNavigatorPrefs";
+	public static final String Pref_NorthHemi = "NorthHemisphere";
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -63,7 +67,7 @@ public class MainActivity extends Activity {
 				//startActivity(startNewMeterReading);
 				
 				Toast.makeText(getApplicationContext(),"Selected Moon mode",Toast.LENGTH_LONG).show();
-				canvasView.SetRotationAngle( 225 );
+				canvasView.SetRotationAngle( 0 );
 			}
 		});
 		
@@ -72,8 +76,20 @@ public class MainActivity extends Activity {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.main, menu);
+		getMenuInflater().inflate(R.menu.options_menu, menu);
 		return true;
+	}
+	
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case R.id.settings_menu:
+			// Create an intent stating which Activity you would like to start
+			Intent startSettingsActivity = new Intent(MainActivity.this, SettingsActivity.class);
+			startActivity(startSettingsActivity); // Launch the Activity using the intent
+			return true;
+		default:
+			return super.onOptionsItemSelected(item);
+		}
 	}
 	
 	//Function to calculate the correct angle to set
@@ -96,7 +112,9 @@ public class MainActivity extends Activity {
 	{
 		Calendar c = Calendar.getInstance(); 
 		boolean currentlyAM = ( c.get(Calendar.AM_PM) == Calendar.AM );
-		boolean northernHemi_Flag = false; //from preference later
+		
+		SharedPreferences prefs = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
+		boolean northernHemi_Flag = prefs.getBoolean(Pref_NorthHemi, true);
 		
 		//Check if in Daylight Saving Time
 		//References are now 1 instead of 12

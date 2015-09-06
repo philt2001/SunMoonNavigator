@@ -4,5 +4,8 @@
     <string name="app_name">SunMoonNavigator</string>
     <string name="action_settings">Settings</string>
     <string name="hello_world">Hello world!</string>
+    <string name="title_activity_settings">SettingsActivity</string>
+    <string name="northHemi_settings">North Hemisphere</string>
+    <string name="southHemi_settings">South Hemisphere</string>
 
 </resources>
