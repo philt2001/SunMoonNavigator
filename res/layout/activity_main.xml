@@ -14,30 +14,17 @@
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
+        android:gravity="center_horizontal"
         android:orientation="vertical" >
-        
-       <LinearLayout
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"
-	        android:layout_alignParentLeft="true"
-	        android:layout_below="@+id/linearLayout1"
-	        android:layout_marginLeft="66dp" 
-	        android:layout_weight=".15">
-	        
 
-	        <Button
-	        	android:id="@+id/sunButton"
-		        android:layout_width="100px"
-		        android:layout_height="100px"
-		        android:layout_alignParentLeft="true"
-		        android:layout_alignParentTop="true"
-		        android:text=""
-		        android:background="@drawable/sun"
-		        android:layout_weight=".25"
-		        />
-	        
-	        
-	    </LinearLayout>
+        <Button
+        	android:id="@+id/sunButton"
+	        android:layout_width="100px"
+	        android:layout_height="100px"
+	        android:layout_centerInParent="true"
+	        android:text=""
+	        android:background="@drawable/sun"
+	        />
 	    
         <sunmoonnavigator.com.CanvasView
 	        android:id="@+id/canvasView"
