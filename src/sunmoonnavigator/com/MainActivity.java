@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -18,6 +19,8 @@ import android.widget.Toast;
 public class MainActivity extends Activity {
 	
 	CanvasView canvasView;
+	public Button Sun_button; 
+	
 	private final static int degreesPerHour = (360/12);
 	private final static int minutesPerHour = (60);
 	private final static long MILLISECS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -26,6 +29,7 @@ public class MainActivity extends Activity {
 	private final static float hoursPerHalfLunarCycle = (float)6;
 	public static final String MY_PREFS_NAME = "SunMoonNavigatorPrefs";
 	public static final String Pref_NorthHemi = "NorthHemisphere";
+	public static final String Pref_SunMode = "SunMode";
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -34,10 +38,11 @@ public class MainActivity extends Activity {
 		//setContentView(new CanvasView(this));
 		setContentView(R.layout.activity_main);
 		
-		Button Sun_button = (Button) findViewById(R.id.sunButton);
-		Button Moon_button = (Button) findViewById(R.id.moonButton);
+		Sun_button = (Button) findViewById(R.id.sunButton);
 		canvasView = (CanvasView) findViewById(R.id.canvasView);
 		
+		//Set the sun/moon button icon
+		UpdateModeImage();
 		
 		//Set the Sun Button Action
 		Sun_button.setOnClickListener(new OnClickListener() 
@@ -51,33 +56,21 @@ public class MainActivity extends Activity {
 				// Launch the Activity using the intent
 				//startActivity(startNewMeterReading);
 				
-				canvasView.SetRotationAngle( CalculateSunAngle() );
-				
-				//Toast.makeText(getApplicationContext(),"Selected Sun mode with "+CalculateSunAngle()+"deg, timeToAngle = "+ConvertTimeToAngle(),Toast.LENGTH_LONG).show();
-				
+				//Update the setting and re-draw the arrow
+				SharedPreferences prefs = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
+				Editor editor = prefs.edit();
+				if ( prefs.getBoolean(Pref_SunMode, true) ) {
+					editor.putBoolean(Pref_SunMode, false );
+					canvasView.SetRotationAngle( CalculateMoonAngle() );
+				}
+				else {
+					editor.putBoolean(Pref_SunMode, true );
+					canvasView.SetRotationAngle( CalculateSunAngle() );
+				}
+				editor.commit();
+				UpdateModeImage();
 			}
 		}); 
-		
-		//Set the Moon Button Action
-		Moon_button.setOnClickListener(new OnClickListener() 
-		{
-			@Override
-			public void onClick(View v) 
-			{
-				// Hint: use Context's startActivity() method
-				// Create an intent stating which Activity you would like to start
-				//Intent startNewMeterReading = new Intent(StartPage.this, NewMeterReading.class);
-				// Launch the Activity using the intent
-				//startActivity(startNewMeterReading);
-				
-				canvasView.SetRotationAngle( CalculateMoonAngle() );
-				
-				Toast.makeText(getApplicationContext(),"Selected Moon mode",Toast.LENGTH_LONG).show();
-				//canvasView.SetRotationAngle( 0 );
-				//CalculateMoonPhaseDays();
-				//Toast.makeText( getApplicationContext(),"The days through lunar cycle is: "+CalculateMoonPhaseDays(),Toast.LENGTH_LONG).show();
-			}
-		});
 		
 	}
 
@@ -99,7 +92,19 @@ public class MainActivity extends Activity {
 			return super.onOptionsItemSelected(item);
 		}
 	}
-
+	
+	//Setup the default SharedPreferences
+	public void SetDefaultSharedPreferences()
+	{
+		SharedPreferences prefs = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
+		Editor editor = prefs.edit();
+		
+		if (!prefs.contains(Pref_SunMode))
+	    {
+			editor.putBoolean(Pref_SunMode, true );
+	    }
+		editor.commit();
+	}
 	
 	//Function to calculate the correct angle for the current time
 	//This is relative to the "reference" time, either 12 (noon) for normal time
@@ -116,31 +121,6 @@ public class MainActivity extends Activity {
 		boolean currentlyAM = ( c.get(Calendar.AM_PM) == Calendar.AM );
 		
 		return ConvertTimeToRelativeAngleToReference(hour, minutes, currentlyAM);
-		
-		/*
-		//Check if in Daylight Saving Time
-		//References are now 1 instead of 12
-		//Note, new Date() should work, but is throwing an error for some reason
-		float referenceHour_deg = 0;
-		if ( TimeZone.getDefault().inDaylightTime( new Date( c.getTimeInMillis() ) ) ) {
-			referenceHour_deg = (float)degreesPerHour;
-		}
-		
-		//Calculate the angle of the hour hand
-		float hourHandAngle_deg = (float)degreesPerHour * ((float)hour + ((float)minute/(float)minutesPerHour) );
-		
-		//Calculate the angle to the reference hour with the correct sign
-		float angleToRefHour_deg = hourHandAngle_deg - referenceHour_deg;
-		if ( currentlyAM ) { //take away 360 to be negative
-			angleToRefHour_deg -= 360;
-			if ( angleToRefHour_deg < -360 ) { //correct for daylight savings time around midnight
-				angleToRefHour_deg += 360;
-			}
-		}
-		
-		Toast.makeText(getApplicationContext(),"Time ("+hour+") to Ref Angle ("+referenceHour_deg+"): hour hand angle = " + hourHandAngle_deg + ", angle to ref hour = "+angleToRefHour_deg,Toast.LENGTH_LONG).show();
-		
-		return angleToRefHour_deg;*/
 	}
 	
 	//Function to calculate the moon phase
@@ -285,6 +265,20 @@ public class MainActivity extends Activity {
         cal.set(Calendar.MILLISECOND, 0);
         Date date = new Date( cal.getTimeInMillis() );
         return date;
+	}
+	
+	//Function to update the image
+	public void UpdateModeImage()
+	{
+		//Set the sun/moon button icon
+		SharedPreferences prefs = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
+		if ( prefs.getBoolean(Pref_SunMode, true) ) {
+			Sun_button.setBackgroundResource(R.drawable.sun);
+		}
+		else {
+			Sun_button.setBackgroundResource(R.drawable.moon);
+		}
+		
 	}
 	
 }

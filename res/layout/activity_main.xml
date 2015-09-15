@@ -16,7 +16,7 @@
         android:layout_centerHorizontal="true"
         android:orientation="vertical" >
         
-        <LinearLayout
+       <LinearLayout
 	        android:layout_width="wrap_content"
 	        android:layout_height="wrap_content"
 	        android:layout_alignParentLeft="true"
@@ -24,7 +24,7 @@
 	        android:layout_marginLeft="66dp" 
 	        android:layout_weight=".15">
 	        
-            <!--  android:text="Sun"  --> 
+
 	        <Button
 	        	android:id="@+id/sunButton"
 		        android:layout_width="100px"
@@ -36,17 +36,6 @@
 		        android:layout_weight=".25"
 		        />
 	        
-	        <!--  android:text="Moon"  -->
-	        <Button
-	        	android:id="@+id/moonButton"
-		        android:layout_width="100px"
-		        android:layout_height="100px"
-		        android:layout_alignParentLeft="true"
-		        android:layout_alignParentTop="true"
-		        android:text=""
-		        android:background="@drawable/moon" 
-		        android:layout_weight=".25"
-		        />
 	        
 	    </LinearLayout>
 	    
