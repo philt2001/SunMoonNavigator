@@ -6,6 +6,8 @@ import java.util.TimeZone;
 
 import android.os.Bundle;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -30,6 +32,7 @@ public class MainActivity extends Activity {
 	public static final String MY_PREFS_NAME = "SunMoonNavigatorPrefs";
 	public static final String Pref_NorthHemi = "NorthHemisphere";
 	public static final String Pref_SunMode = "SunMode";
+	public static final String Pref_ValidUseAccepted = "ValidUseAccepted";
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -69,8 +72,13 @@ public class MainActivity extends Activity {
 				}
 				editor.commit();
 				UpdateModeImage();
+				
+				
 			}
 		}); 
+		
+		//See if the user has accepted the valid use conditions
+		validUseConfirmation();
 		
 	}
 
@@ -102,6 +110,10 @@ public class MainActivity extends Activity {
 		if (!prefs.contains(Pref_SunMode))
 	    {
 			editor.putBoolean(Pref_SunMode, true );
+	    }
+		if (!prefs.contains(Pref_ValidUseAccepted))
+	    {
+			editor.putBoolean(Pref_ValidUseAccepted, false );
 	    }
 		editor.commit();
 	}
@@ -279,6 +291,37 @@ public class MainActivity extends Activity {
 			Sun_button.setBackgroundResource(R.drawable.moon);
 		}
 		
+	}
+
+	
+	//Function to get the user confirmation the limitations
+	//from: http://www.androidhub4you.com/2012/09/alert-dialog-box-or-confirmation-box-in.html
+	public void validUseConfirmation() {
+		
+		SharedPreferences prefs = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
+		if ( prefs.getBoolean(Pref_ValidUseAccepted, false) ) {
+			return;
+		}
+
+		
+        DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+               public void onClick(DialogInterface dialog, int which) {
+                     switch (which) {
+                     case DialogInterface.BUTTON_POSITIVE:
+                            // OK button clicked
+	                    	SharedPreferences prefs = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
+	                 		Editor editor = prefs.edit();
+	                 		editor.putBoolean(Pref_ValidUseAccepted, true );
+	                 		editor.commit();
+                            //Toast.makeText(getApplicationContext(), "OK Clicked",Toast.LENGTH_LONG).show();
+                            break;
+                     }
+               }
+        };
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(R.string.validUse_statement)
+        	.setPositiveButton(R.string.validUse_accept, dialogClickListener).show();
 	}
 	
 }

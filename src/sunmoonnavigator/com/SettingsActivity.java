@@ -2,6 +2,8 @@ package sunmoonnavigator.com;
 
 import android.os.Bundle;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -15,7 +17,9 @@ public class SettingsActivity extends Activity {
 	
 	public static final String MY_PREFS_NAME = "SunMoonNavigatorPrefs";
 	public static final String Pref_NorthHemi = "NorthHemisphere";
+	public static final String Pref_ValidUseAccepted = "ValidUseAccepted";
 	Button NorthSouthHemi_button;
+	Button ResetValidUse_button;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -23,13 +27,14 @@ public class SettingsActivity extends Activity {
 		setContentView(R.layout.activity_settings);
 		
 		NorthSouthHemi_button = (Button) findViewById(R.id.NorthSouthHemisphere_Button);
+		ResetValidUse_button = (Button) findViewById(R.id.ResetValidUse_Button);
 		
 		//Setup the default SharedPreferences
 		SetDefaultSharedPreferences();
 		
 		UpdateButtonText();
 		
-		//Set the New Meter Reading Button Action
+		//Set the North/South Hemisphere button listener
 		NorthSouthHemi_button.setOnClickListener(new OnClickListener() 
 		{
 			@Override
@@ -50,6 +55,22 @@ public class SettingsActivity extends Activity {
 				Toast.makeText(getApplicationContext(),"North hemi = "+northHemi,Toast.LENGTH_LONG).show();
 			}
 		}); //End of NorthSouthHemi_button setOnClickListener
+		
+		ResetValidUse_button.setOnClickListener(new OnClickListener() 
+		{
+			@Override
+			public void onClick(View v) 
+			{
+				//Change the preference to false and then show the message
+				SharedPreferences prefs = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
+				Editor editor = prefs.edit();
+				editor.putBoolean(Pref_ValidUseAccepted, false);
+				editor.commit();
+				
+				//Show the message
+				validUseConfirmation();
+			}
+		}); //End of ResetValidUse_button setOnClickListener
 	}
 
 	@Override
@@ -98,6 +119,36 @@ public class SettingsActivity extends Activity {
 			NorthSouthHemi_button.setText(R.string.southHemi_settings);
 		}
 		
+	}
+	
+	//Function to get the user confirmation the limitations - copied from MainActivity
+	//from: http://www.androidhub4you.com/2012/09/alert-dialog-box-or-confirmation-box-in.html
+	public void validUseConfirmation() {
+		
+		SharedPreferences prefs = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
+		if ( prefs.getBoolean(Pref_ValidUseAccepted, false) ) {
+			return;
+		}
+
+		
+        DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+               public void onClick(DialogInterface dialog, int which) {
+                     switch (which) {
+                     case DialogInterface.BUTTON_POSITIVE:
+                            // OK button clicked
+	                    	SharedPreferences prefs = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
+	                 		Editor editor = prefs.edit();
+	                 		editor.putBoolean(Pref_ValidUseAccepted, true );
+	                 		editor.commit();
+                            //Toast.makeText(getApplicationContext(), "OK Clicked",Toast.LENGTH_LONG).show();
+                            break;
+                     }
+               }
+        };
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(R.string.validUse_statement)
+        	.setPositiveButton(R.string.validUse_accept, dialogClickListener).show();
 	}
 	
 }

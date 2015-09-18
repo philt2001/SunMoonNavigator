@@ -7,5 +7,8 @@
     <string name="title_activity_settings">SettingsActivity</string>
     <string name="northHemi_settings">North Hemisphere</string>
     <string name="southHemi_settings">South Hemisphere</string>
+    <string name="validUse_statement">Directions are only valid if the time is correct for the current location.\n\nPlease confirm you have read this</string>
+    <string name="validUse_accept">OK</string>
+    <string name="validUse_view">View Use Conditions</string>
 
 </resources>
