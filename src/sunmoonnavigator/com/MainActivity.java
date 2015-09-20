@@ -5,6 +5,7 @@ import java.util.Calendar;
 import java.util.TimeZone;
 
 import android.os.Bundle;
+import android.os.Handler;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -23,6 +24,7 @@ public class MainActivity extends Activity {
 	
 	CanvasView canvasView;
 	public Button Sun_button; 
+	private Handler handler = new Handler();
 	
 	private final static int degreesPerHour = (360/12);
 	private final static int minutesPerHour = (60);
@@ -34,6 +36,7 @@ public class MainActivity extends Activity {
 	public static final String Pref_NorthHemi = "NorthHemisphere";
 	public static final String Pref_SunMode = "SunMode";
 	public static final String Pref_ValidUseAccepted = "ValidUseAccepted";
+	private static final int updateRate_min = 15; //Update angle every 15 minutes
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -68,23 +71,20 @@ public class MainActivity extends Activity {
 				//Update the setting and re-draw the arrow
 				SharedPreferences prefs = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
 				Editor editor = prefs.edit();
-				if ( prefs.getBoolean(Pref_SunMode, true) ) {
-					editor.putBoolean(Pref_SunMode, false );
-					canvasView.SetRotationAngle( CalculateMoonAngle() );
-				}
-				else {
-					editor.putBoolean(Pref_SunMode, true );
-					canvasView.SetRotationAngle( CalculateSunAngle() );
-				}
+				editor.putBoolean(Pref_SunMode, !prefs.getBoolean(Pref_SunMode, true) );
 				editor.commit();
+				
+				DrawCorrectNorthArrow();
+				
 				UpdateModeImage();
-				
-				
 			}
 		}); 
 		
 		//See if the user has accepted the valid use conditions
 		validUseConfirmation();
+		
+		//Start the update loop
+		handler.postDelayed(updateArrowTask, updateRate_min*1000);
 		
 	}
 
@@ -271,6 +271,18 @@ public class MainActivity extends Activity {
 		return halfDiffAngle_deg;
 	}
 	
+	//Function to draw the correct angle of arrow
+	private void DrawCorrectNorthArrow()
+	{
+		SharedPreferences prefs = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
+		if ( prefs.getBoolean(Pref_SunMode, true) ) {
+			canvasView.SetRotationAngle( CalculateMoonAngle() );
+		}
+		else {
+			canvasView.SetRotationAngle( CalculateSunAngle() );
+		}
+	}
+	
 	//Function to return a date object for a given day
 	public static Date getDate(int year, int month, int day) {
         Calendar cal = Calendar.getInstance();
@@ -329,5 +341,15 @@ public class MainActivity extends Activity {
         builder.setMessage(R.string.validUse_statement)
         	.setPositiveButton(R.string.validUse_accept, dialogClickListener).show();
 	}
+	
+	//Function to update the arrow position over time
+	//From: https://web.archive.org/web/20100126090836/http://developer.android.com/intl/zh-TW/resources/articles/timed-ui-updates.html
+	private Runnable updateArrowTask = new Runnable() {
+	   public void run() {
+		   DrawCorrectNorthArrow();
+	     
+		   handler.postDelayed(this, updateRate_min*1000);
+	   }
+	};
 	
 }
