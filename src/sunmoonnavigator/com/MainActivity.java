@@ -14,6 +14,7 @@ import android.content.SharedPreferences.Editor;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.Toast;
@@ -37,8 +38,13 @@ public class MainActivity extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		//setContentView(R.layout.activity_main);
-		//setContentView(new CanvasView(this));
+		
+		//Display this activity when the screen unlocks if it was already open
+		//From: https://stackoverflow.com/questions/3629179/android-activity-over-default-lock-screen/5727133#5727133
+		//Alternative: https://stackoverflow.com/questions/19074466/android-how-to-show-dialog-or-activity-over-lock-screen-not-unlock-the-screen/25707716#25707716
+		//List of options: https://developer.android.com/reference/android/view/WindowManager.LayoutParams.html
+		getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
+		
 		setContentView(R.layout.activity_main);
 		
 		Sun_button = (Button) findViewById(R.id.sunButton);
