@@ -234,7 +234,7 @@ public class MainActivity extends Activity {
 		int hourToAdjust = (int)hoursToAdjust;
 		int minuteToAdjust = (int)Math.floor( (hoursToAdjust-hourToAdjust) * MINUTES_PER_HOUR );
 		
-		//Toast.makeText( getApplicationContext(),"Fraction of mooon phase = " + fractionOfMoonPhase + ", hours to adjust = " + hoursToAdjust 
+		//Toast.makeText( getApplicationContext(),"Fraction of moon phase = " + fractionOfMoonPhase + ", hours to adjust = " + hoursToAdjust 
 		//		+ "offset in h:m = "+hourToAdjust + ":"+minuteToAdjust,Toast.LENGTH_LONG).show();
 		
 		Calendar c = Calendar.getInstance();
@@ -277,16 +277,30 @@ public class MainActivity extends Activity {
 		return halfDiffAngle_deg;
 	}
 	
+	//Moon calculations - better explanation than quora.com:
+	//Calculate the virtual hour hand (based on the moon phase)
+	//Point the virtual hour at the moon
+	//Halfway between the "actual" hour hand and the reference hour is South
 	private float CalculateMoonAngle()
 	{
 		SharedPreferences prefs = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
 		boolean northernHemi_Flag = prefs.getBoolean(Pref_NorthHemi, true);
 		
-		float halfDiffAngle_deg = ConvertTimeAndMoonPhaseToRelativeAngleToReference() / 2;
-		Toast.makeText( getApplicationContext(),"halfDiffAngle " + halfDiffAngle_deg,Toast.LENGTH_LONG).show();
+		//Do the ordinary time calculation
+		float halfDiffAngle_deg = ConvertTimeToRelativeAngleToReference() / 2;
+		float halfDiffAngle_deg_copy = halfDiffAngle_deg;
+		
+		//Apply the moon phase offset
+		float hoursToAdjust = ConvertMoonPhaseToFractionalHours();
+		float moonPhaseAdjustment_deg = hoursToAdjust * degreesPerHour;
+		
+		halfDiffAngle_deg += moonPhaseAdjustment_deg;
+		
+		//float halfDiffAngle_deg = ConvertTimeAndMoonPhaseToRelativeAngleToReference() / 2;
+		//Toast.makeText( getApplicationContext(),"halfDiffAngle " + halfDiffAngle_deg,Toast.LENGTH_LONG).show();
 		
 		//float phoneOrintationOffset = ConvertTimeToRelativeAngleToReference();
-		float phoneOrintationOffset = ConvertMoonPhaseToFractionalHours() * degreesPerHour;
+		//float phoneOrintationOffset = ConvertMoonPhaseToFractionalHours() * degreesPerHour;
 		
 		//halfDiffAngle_deg += phoneOrintationOffset;
 		
@@ -295,11 +309,11 @@ public class MainActivity extends Activity {
 		//If in the south, then this is north
 		if ( northernHemi_Flag )
 		{
-			//halfDiffAngle_deg += 180;
+			halfDiffAngle_deg += 180;
 		}
 		
-		Toast.makeText( getApplicationContext(),"CalculateMoonAngle angle is " + halfDiffAngle_deg +
-				", phone orintation offset = " + phoneOrintationOffset,Toast.LENGTH_LONG).show();
+		Toast.makeText( getApplicationContext(),"Original CalculateMoonAngle angle is " + halfDiffAngle_deg_copy +
+				", moon phase adjustment = " + moonPhaseAdjustment_deg,Toast.LENGTH_LONG).show();
 		
 		return halfDiffAngle_deg;
 	}
@@ -313,6 +327,24 @@ public class MainActivity extends Activity {
 			//canvasView.SetRotationAngle( 90 );
 		}
 		else {
+			Calendar c = Calendar.getInstance(); 
+			
+			float currHour = c.get(Calendar.HOUR) + ( (float)c.get(Calendar.MINUTE) / (float)60);
+			float offsetHour = currHour + ConvertMoonPhaseToFractionalHours();
+			float refHour = 0; //in GMT
+			if ( TimeZone.getDefault().inDaylightTime( new Date( c.getTimeInMillis() ) ) ) {
+				refHour = (float)1;
+			}
+			
+			//DEBUG
+			//refHour = 0;
+			//currHour = (float)4.5;
+			//offsetHour = 10;
+			
+			//Toast.makeText( getApplicationContext(),"Clock Hour (R)= " + currHour + ", Offset hour (B) = " + offsetHour 
+			//	+ ", Ref Hour (G) = "+refHour,Toast.LENGTH_LONG).show();
+			
+			//canvasView.SetClockFace( currHour, offsetHour, refHour );
 			canvasView.SetRotationAngle( CalculateMoonAngle() );
 		}
 	}

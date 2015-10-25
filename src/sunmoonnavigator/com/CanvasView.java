@@ -9,12 +9,19 @@ import android.graphics.Path;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Toast;
 
 public class CanvasView extends View {
 	
 	Paint paint;
 	Path path;
 	float rotationAngle_deg;
+	
+	boolean clockMode;
+	float currHour;
+	float offsetHour;
+	float refHour;
+	float hoursPerRotation;
 	 
 	public CanvasView(Context context) {
 	 super(context);
@@ -35,19 +42,117 @@ public class CanvasView extends View {
 		paint = new Paint();
 		path = new Path();
 		rotationAngle_deg = 45;
+		
+		clockMode = false;
+		currHour = 0;
+		offsetHour = 0;
+		refHour = 0;
+		hoursPerRotation = 12;
 	}
 	
 	//This is the angle that the arrow should be rotated clockwise from facing the top of the phone
 	public void SetRotationAngle( float angle_deg )
 	{
 		this.rotationAngle_deg = angle_deg + 180; //angle of 0 faces the arrow to the bottom of the phone
+		this.clockMode = false;
 		invalidate(); //force a re-draw
+	}
+	
+	//Function to update the clock face
+	public void SetClockFace( float currHour, float offsetHour, float refHour )
+	{
+		this.currHour = -(currHour + 6);
+		this.offsetHour = -(offsetHour + 6);
+		this.refHour = -(refHour + 6);
+		
+		this.clockMode = true;
+		invalidate(); //force a re-draw
+	}
+	
+	//Create a 2D rotation matrix
+	public float [][] CreateRotationMatrix_deg( float rotAngle_deg )
+	{
+		float [][] rotateMatrix = new float[][] {
+				 { (float) Math.cos( Math.toRadians(rotAngle_deg) ), (float) -Math.sin( Math.toRadians(rotAngle_deg)) },
+				 { (float) Math.sin( Math.toRadians(rotAngle_deg) ),  (float) Math.cos( Math.toRadians(rotAngle_deg)) },
+		 };
+		return rotateMatrix;
+	}
+	
+	//Rotate a 2D list of points (in place) by a given rotation matrix and scale the points
+	//Size should be N rows by 2 columns
+	public void RotateAndScaleMatrix( float [][] matrix, float [][] roationMatrix, float radius )
+	{
+		float [] temp = new float[2];
+		 for (int idx = 0; idx < matrix.length; idx++)
+		 {
+			 matrix[idx][1] *= radius;
+			 temp[0] = matrix[idx][0] * roationMatrix[0][0] + matrix[idx][1] * roationMatrix[1][0];
+			 temp[1] = matrix[idx][0] * roationMatrix[0][1] + matrix[idx][1] * roationMatrix[1][1];
+			 
+			 matrix[idx][0] = temp[0];
+			 matrix[idx][1] = temp[1];
+		 }
+	}
+	
+	//Function to draw a clock face
+	public void drawClock( Canvas canvas )
+	{
+		int width = canvas.getWidth();
+		 int height = canvas.getHeight();
+		 int radius = (int) ((double)(width/2) * 0.9);
+		 int halfWidth = width/2;
+		 int halfHeight = height/2;
+		 
+		 //Clear the path (last arrow)
+		 path.reset();
+		 
+		 paint.setColor(Color.BLACK);
+		 paint.setStrokeWidth(10);
+		 paint.setStyle(Paint.Style.STROKE);
+		 
+		 paint.setStyle(Paint.Style.STROKE);
+		 canvas.drawCircle(width/2, height/2, radius, paint);
+		 
+		 //Draw circles for the specific angle
+		 int dotRadius = (int) ((double)(width/2) * 0.05);
+		 float [][] dotPosition = new float [][] {
+				 {0, 1},
+		 };
+		 
+		 //Calculate the circle centres
+		 float [][] rotateMatrix = CreateRotationMatrix_deg( 360*currHour/hoursPerRotation );
+		 RotateAndScaleMatrix( dotPosition, rotateMatrix, (int) ((double)(width/2) * 0.8) );
+		 paint.setColor(Color.RED);
+		 canvas.drawCircle(halfWidth +dotPosition[0][0], halfHeight +dotPosition[0][1], dotRadius, paint);
+		 
+		 dotPosition[0][0] = 0;
+		 dotPosition[0][1] = 1;
+		 rotateMatrix = CreateRotationMatrix_deg( 360*offsetHour/hoursPerRotation );
+		 RotateAndScaleMatrix( dotPosition, rotateMatrix, (int) ((double)(width/2) * 0.8) );
+		 paint.setColor(Color.BLUE);
+		 dotRadius = (int) ((double)(width/2) * 0.1);
+		 canvas.drawCircle(halfWidth +dotPosition[0][0], halfHeight +dotPosition[0][1], dotRadius, paint);
+		 
+		 dotPosition[0][0] = 0;
+		 dotPosition[0][1] = 1;
+		 rotateMatrix = CreateRotationMatrix_deg( 360*refHour/hoursPerRotation );
+		 RotateAndScaleMatrix( dotPosition, rotateMatrix, (int) ((double)(width/2) * 0.8) );
+		 paint.setColor(Color.GREEN);
+		 canvas.drawCircle(halfWidth +dotPosition[0][0], halfHeight +dotPosition[0][1], dotRadius, paint);
+		 
 	}
 	 
 	@Override
 	protected void onDraw(Canvas canvas) {
 		 // TODO Auto-generated method stub
 		 super.onDraw(canvas);
+		 
+		 if ( this.clockMode )
+		 {
+			 drawClock(canvas);
+			 return;
+		 }
 		 
 		 int width = canvas.getWidth();
 		 int height = canvas.getHeight();
@@ -82,22 +187,10 @@ public class CanvasView extends View {
 			{-30, (float)0.9}, //left top of arrow head
 			};
 		 
-		 float [][] rotateMatrix = new float[][] {
-				 { (float) Math.cos( Math.toRadians(rotationAngle_deg) ), (float) -Math.sin( Math.toRadians(rotationAngle_deg)) },
-				 { (float) Math.sin( Math.toRadians(rotationAngle_deg) ),  (float) Math.cos( Math.toRadians(rotationAngle_deg)) },
-		 };
+		 float [][] rotateMatrix = CreateRotationMatrix_deg( rotationAngle_deg );
 		 
 		 //Scale to the screen size and rotate
-		 float [] temp = new float[2];
-		 for (int idx = 0; idx < arrowPath.length; idx++)
-		 {
-			 arrowPath[idx][1] *= radius;
-			 temp[0] = arrowPath[idx][0] * rotateMatrix[0][0] + arrowPath[idx][1] * rotateMatrix[1][0];
-			 temp[1] = arrowPath[idx][0] * rotateMatrix[0][1] + arrowPath[idx][1] * rotateMatrix[1][1];
-			 
-			 arrowPath[idx][0] = temp[0];
-			 arrowPath[idx][1] = temp[1];
-		 }
+		 RotateAndScaleMatrix( arrowPath, rotateMatrix, radius );
 		 
 		 //Draw the arrow
 		 path.moveTo( halfWidth + arrowPath[0][0], halfHeight + arrowPath[0][1] );
