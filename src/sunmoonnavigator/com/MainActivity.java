@@ -19,6 +19,7 @@ import android.view.WindowManager;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.Toast;
+import Moon.MoonPhase;
 
 public class MainActivity extends Activity {
 	
@@ -83,8 +84,10 @@ public class MainActivity extends Activity {
 		//See if the user has accepted the valid use conditions
 		validUseConfirmation();
 		
+		DrawCorrectNorthArrow();
+		
 		//Start the update loop
-		handler.postDelayed(updateArrowTask, updateRate_min*1000);
+		handler.postDelayed(updateArrowTask, updateRate_min*60*1000);
 		
 	}
 
@@ -149,21 +152,15 @@ public class MainActivity extends Activity {
 		//Best solution would be using something like: https://code.google.com/p/moonphase/source/browse/trunk/Moon/MoonPhase.java?r=12
 		//or: http://web.mit.edu/javadev/packages/Acme/Phase.java
 		
-		//Lazy (temp) solution is to have a fixed date and calculate days difference
-		//There was a new moon on (Friday) 14th august 2015
-		//Note: months start from 0, so August is actually month 7
-		Date reference = getDate(2015, 7, 12);
 		Calendar c = Calendar.getInstance();
-		Date today = getDate(c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH) );
-		//Date today = getDate(2016, 7, 22);
 		
-		//Calculate the number of days different
-		long diff_ms = today.getTime() - reference.getTime();
-		float numDays = (float) (diff_ms / MILLISECS_PER_DAY);
+		//Using https://code.google.com/p/moonphase/source/browse/trunk/Moon/MoonPhase.java?r=12
+		MoonPhase moonPhase = new MoonPhase(c);
+		moonPhase.getPhase(); //update the class the the current date
 		
-		//Toast.makeText( getApplicationContext(),"diff_ms = " + diff_ms + ", The days through lunar cycle is: "+numDays% daysPerLunarCycle,Toast.LENGTH_LONG).show();
+		//Toast.makeText( getApplicationContext(),"Moon Phase in days = " + moonPhase.getMoonAgeAsDays(),Toast.LENGTH_LONG).show();
 		
-		return (numDays % daysPerLunarCycle);
+		return (float)moonPhase.getMoonAgeAsDays();
 	}
 	
 	
@@ -218,10 +215,6 @@ public class MainActivity extends Activity {
 			hoursToAdjust = -hoursPerHalfLunarCycle * ( (1- fractionOfMoonPhase) * 2 ); //Scale by 2 as only go to 0.5 for a full 6 hours
 		}
 		
-		
-		//DEBUG
-		//hoursToAdjust = -3;
-		
 		return hoursToAdjust;
 	}
 	
@@ -252,7 +245,7 @@ public class MainActivity extends Activity {
 		int minutes = c.get(Calendar.MINUTE);
 		//boolean currentlyAM = ( c.get(Calendar.AM_PM) == Calendar.AM );
 		
-		Toast.makeText( getApplicationContext(),"Calculation time is " + hour + ":" + minutes+" "+"(AM:"+currentlyAM+") and hours to adjust = " + hoursToAdjust ,Toast.LENGTH_LONG).show();
+		//Toast.makeText( getApplicationContext(),"Calculation time is " + hour + ":" + minutes+" "+"(AM:"+currentlyAM+") and hours to adjust = " + hoursToAdjust ,Toast.LENGTH_LONG).show();
 		
 		return ConvertTimeToRelativeAngleToReference(hour, minutes, currentlyAM);
 	}
@@ -312,8 +305,8 @@ public class MainActivity extends Activity {
 			halfDiffAngle_deg += 180;
 		}
 		
-		Toast.makeText( getApplicationContext(),"Original CalculateMoonAngle angle is " + halfDiffAngle_deg_copy +
-				", moon phase adjustment = " + moonPhaseAdjustment_deg,Toast.LENGTH_LONG).show();
+		//Toast.makeText( getApplicationContext(),"Original CalculateMoonAngle angle is " + halfDiffAngle_deg_copy +
+		//		", moon phase adjustment = " + moonPhaseAdjustment_deg,Toast.LENGTH_LONG).show();
 		
 		return halfDiffAngle_deg;
 	}
@@ -413,8 +406,9 @@ public class MainActivity extends Activity {
 	private Runnable updateArrowTask = new Runnable() {
 	   public void run() {
 		   DrawCorrectNorthArrow();
+		   Toast.makeText( getApplicationContext(),"updateArrowTask fired at" ,Toast.LENGTH_LONG).show();
 	     
-		   handler.postDelayed(this, updateRate_min*1000);
+		   handler.postDelayed(this, updateRate_min*60*1000);
 	   }
 	};
 	
