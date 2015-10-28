@@ -10,5 +10,6 @@
     <string name="validUse_statement">Directions are only valid if the time is correct for the current location.\n\nPlease confirm you have read this</string>
     <string name="validUse_accept">OK</string>
     <string name="validUse_view">View Use Conditions</string>
+    <string name="settings_title">Settings</string>
 
 </resources>
