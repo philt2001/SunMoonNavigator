@@ -20,6 +20,7 @@ public class SettingsActivity extends Activity {
 	public static final String Pref_ValidUseAccepted = "ValidUseAccepted";
 	Button NorthSouthHemi_button;
 	Button ResetValidUse_button;
+	Button Directions_button;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -28,6 +29,7 @@ public class SettingsActivity extends Activity {
 		
 		NorthSouthHemi_button = (Button) findViewById(R.id.NorthSouthHemisphere_Button);
 		ResetValidUse_button = (Button) findViewById(R.id.ResetValidUse_Button);
+		Directions_button = (Button) findViewById(R.id.Directions_Button);
 		
 		//Setup the default SharedPreferences
 		SetDefaultSharedPreferences();
@@ -69,6 +71,16 @@ public class SettingsActivity extends Activity {
 				
 				//Show the message
 				validUseConfirmation();
+			}
+		}); //End of ResetValidUse_button setOnClickListener
+		
+		Directions_button.setOnClickListener(new OnClickListener() 
+		{
+			@Override
+			public void onClick(View v) 
+			{
+				//Show the message
+				directionsDialog();
 			}
 		}); //End of ResetValidUse_button setOnClickListener
 	}
@@ -148,6 +160,24 @@ public class SettingsActivity extends Activity {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage(R.string.validUse_statement)
+        	.setPositiveButton(R.string.validUse_accept, dialogClickListener).show();
+	}
+	
+	//Function to display the usage directions
+	//from: http://www.androidhub4you.com/2012/09/alert-dialog-box-or-confirmation-box-in.html
+	public void directionsDialog() {
+        DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+               public void onClick(DialogInterface dialog, int which) {
+                     switch (which) {
+                     case DialogInterface.BUTTON_POSITIVE:
+                            // OK button clicked
+                            break;
+                     }
+               }
+        };
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(R.string.directions_text)
         	.setPositiveButton(R.string.validUse_accept, dialogClickListener).show();
 	}
 	

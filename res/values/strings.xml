@@ -11,5 +11,7 @@
     <string name="validUse_accept">OK</string>
     <string name="validUse_view">View Use Conditions</string>
     <string name="settings_title">Settings</string>
+    <string name="directions_view">Directions</string>
+    <string name="directions_text">Point the top of the phone at either the sun or moon and the arrow will point North.\n\nSelect either sun/moon mode by clicking on the icon.\n\nBe sure to select the correct hemisphere.</string>
 
 </resources>
