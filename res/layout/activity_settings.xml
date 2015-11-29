@@ -16,15 +16,6 @@
         android:orientation="vertical" >
         
         <Button
-	        android:id="@+id/Directions_Button"
-	        android:layout_width="match_parent"
-	        android:layout_height="wrap_content"
-	        android:text="@string/directions_view"
-	        android:padding="10dp"
-	        android:layout_margin="10dp"
-	        android:background = "@drawable/button_shape" />
-        
-        <Button
 	        android:id="@+id/NorthSouthHemisphere_Button"
 	        android:layout_width="match_parent"
 	        android:layout_height="wrap_content"

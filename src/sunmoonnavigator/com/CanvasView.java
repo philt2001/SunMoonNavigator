@@ -22,6 +22,7 @@ public class CanvasView extends View {
 	float offsetHour;
 	float refHour;
 	float hoursPerRotation;
+	String displayText;  
 	 
 	public CanvasView(Context context) {
 	 super(context);
@@ -51,10 +52,11 @@ public class CanvasView extends View {
 	}
 	
 	//This is the angle that the arrow should be rotated clockwise from facing the top of the phone
-	public void SetRotationAngle( float angle_deg )
+	public void SetRotationAngle( float angle_deg, String displayText )
 	{
 		this.rotationAngle_deg = angle_deg + 180; //angle of 0 faces the arrow to the bottom of the phone
 		this.clockMode = false;
+		this.displayText = displayText;
 		invalidate(); //force a re-draw
 	}
 	
@@ -151,7 +153,7 @@ public class CanvasView extends View {
 		 if ( this.clockMode )
 		 {
 			 drawClock(canvas);
-			 return;
+			 //return;
 		 }
 		 
 		 int width = canvas.getWidth();
@@ -202,7 +204,12 @@ public class CanvasView extends View {
 		 
 		 paint.setColor(Color.RED);
 		 canvas.drawPath(path, paint);
-	 
+		 
+		 //Add the text
+		 paint.setColor(Color.BLACK);
+		 paint.setTextSize(25);
+		 paint.setStrokeWidth(0); //need to turn this off, otherwise it covers the text
+		 canvas.drawText( displayText, 0, 25, paint);
 	 
 	}
 }

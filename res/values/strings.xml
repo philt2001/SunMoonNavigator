@@ -7,11 +7,20 @@
     <string name="title_activity_settings">SettingsActivity</string>
     <string name="northHemi_settings">North Hemisphere</string>
     <string name="southHemi_settings">South Hemisphere</string>
-    <string name="validUse_statement">Directions are only valid if the time is correct for the current location.\n\nPlease confirm you have read this</string>
+    <string name="validUse_statement">Directions are only valid if the time is correct for the current location</string>
     <string name="validUse_accept">OK</string>
     <string name="validUse_view">View Use Conditions</string>
     <string name="settings_title">Settings</string>
-    <string name="directions_view">Directions</string>
-    <string name="directions_text">Point the top of the phone at either the sun or moon and the arrow will point North.\n\nSelect either sun/moon mode by clicking on the icon.\n\nBe sure to select the correct hemisphere.</string>
+    <string name="instructions_view">Instructions</string>
+    <string name="instructions_text">Point the top of the phone at either the sun or moon and the arrow will point North.\n\nSelect either sun/moon mode by clicking on the icon.\n\nBe sure to select the correct hemisphere.</string>
+    
+    <string name="moonPhase_new">New</string>
+    <string name="moonPhase_waxingC">Waxing Crescet</string>
+    <string name="moonPhase_firstQ">First Quarter</string>
+    <string name="moonPhase_waxingG">Waxing Gibbous</string>
+    <string name="moonPhase_full">Full</string>
+    <string name="moonPhase_waningG">Waning Gibbous</string>
+    <string name="moonPhase_thirdQ">Third Quarter</string>
+    <string name="moonPhase_waningC">Waning Crescent</string>
 
 </resources>

@@ -31,12 +31,14 @@ public class MainActivity extends Activity {
 	private final static int minutesPerHour = (60);
 	private final static long MILLISECS_PER_DAY = 24 * 60 * 60 * 1000;
 	private final static long MINUTES_PER_HOUR = 60;
-	private final static float daysPerLunarCycle = (float)29.53;
+	private final static float daysPerLunarCycle = (float)29.53058868;
+	private final static float daysPerLunarQuarterTolerance = (float)1; //if within 1 day, then report the new/full/first/last quarter 
 	private final static float hoursPerHalfLunarCycle = (float)6;
 	public static final String MY_PREFS_NAME = "SunMoonNavigatorPrefs";
 	public static final String Pref_NorthHemi = "NorthHemisphere";
 	public static final String Pref_SunMode = "SunMode";
 	public static final String Pref_ValidUseAccepted = "ValidUseAccepted";
+	public static final String Pref_InstructionsRead = "InstructionsRead";
 	private static final int updateRate_min = 15; //Update angle every 15 minutes
 	
 	@Override
@@ -81,8 +83,8 @@ public class MainActivity extends Activity {
 			}
 		}); 
 		
-		//See if the user has accepted the valid use conditions
-		validUseConfirmation();
+		//Show the instructions
+		instructionsDialog(false);
 		
 		DrawCorrectNorthArrow();
 		
@@ -105,6 +107,13 @@ public class MainActivity extends Activity {
 			Intent startSettingsActivity = new Intent(MainActivity.this, SettingsActivity.class);
 			startActivity(startSettingsActivity); // Launch the Activity using the intent
 			return true;
+		case R.id.instructions:
+			//Display the instructions dialog
+			SharedPreferences prefs = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
+			Editor editor = prefs.edit();
+			editor.putBoolean(Pref_InstructionsRead, false);
+			editor.commit();
+			instructionsDialog(true);
 		default:
 			return super.onOptionsItemSelected(item);
 		}
@@ -124,6 +133,11 @@ public class MainActivity extends Activity {
 	    {
 			editor.putBoolean(Pref_ValidUseAccepted, false );
 	    }
+		if (!prefs.contains(Pref_InstructionsRead))
+	    {
+			editor.putBoolean(Pref_InstructionsRead, false );
+	    }
+		
 		editor.commit();
 	}
 	
@@ -215,7 +229,57 @@ public class MainActivity extends Activity {
 			hoursToAdjust = -hoursPerHalfLunarCycle * ( (1- fractionOfMoonPhase) * 2 ); //Scale by 2 as only go to 0.5 for a full 6 hours
 		}
 		
-		return hoursToAdjust;
+		//Toast.makeText( getApplicationContext(),"ConvertMoonPhaseToFractionalHours\n " + 
+		//		"fractionOfMoonPhase = " + fractionOfMoonPhase + "\n" + 
+		//		"moonPhaseDays = " + moonPhaseDays,Toast.LENGTH_LONG).show();
+		
+		return -hoursToAdjust;
+	}
+	
+	//Function to return the moon phase name, giving a tolerance for first/third quarter, full and new
+	private String GetMoonPhaseString()
+	{
+		float moonPhaseDays = CalculateMoonPhaseDays();
+		float lunarDaysFirstQuarter = daysPerLunarCycle/4;
+		float lunarDaysFull = 2*daysPerLunarCycle/4;
+		float lunarDaysThirdQuarter = 3*daysPerLunarCycle/4;
+		
+		//Special cases
+		if ( moonPhaseDays < (daysPerLunarQuarterTolerance/2) || (daysPerLunarCycle-moonPhaseDays) < (daysPerLunarQuarterTolerance/2) )
+		{
+			return getResources().getString(R.string.moonPhase_new);
+		}
+		if ( (lunarDaysFirstQuarter-daysPerLunarQuarterTolerance/2) < moonPhaseDays && moonPhaseDays < (lunarDaysFirstQuarter+daysPerLunarQuarterTolerance/2) )
+		{
+			return getResources().getString(R.string.moonPhase_firstQ);
+		}
+		if ( (lunarDaysFull-daysPerLunarQuarterTolerance/2) < moonPhaseDays && moonPhaseDays < (lunarDaysFull+daysPerLunarQuarterTolerance/2) )
+		{
+			return getResources().getString(R.string.moonPhase_full);
+		}
+		if ( (lunarDaysThirdQuarter-daysPerLunarQuarterTolerance/2) < moonPhaseDays && moonPhaseDays < (lunarDaysThirdQuarter+daysPerLunarQuarterTolerance/2) )
+		{
+			return getResources().getString(R.string.moonPhase_thirdQ);
+		}
+		
+		//General
+		if ( moonPhaseDays < lunarDaysFirstQuarter )
+		{
+			return getResources().getString(R.string.moonPhase_waxingC);
+		}
+		if ( moonPhaseDays < lunarDaysFull )
+		{
+			return getResources().getString(R.string.moonPhase_waxingG);
+		}
+		if ( moonPhaseDays < lunarDaysThirdQuarter )
+		{
+			return getResources().getString(R.string.moonPhase_waningG);
+		}
+		else 
+		{
+			return getResources().getString(R.string.moonPhase_waningC);
+		}
+		
 	}
 	
 	//Function to get the angle for the current moon phase and time
@@ -231,11 +295,6 @@ public class MainActivity extends Activity {
 		//		+ "offset in h:m = "+hourToAdjust + ":"+minuteToAdjust,Toast.LENGTH_LONG).show();
 		
 		Calendar c = Calendar.getInstance();
-		
-		//DEBUG
-		/*c.set( Calendar.HOUR, 4 );
-		c.set( Calendar.MINUTE, 30 );
-		c.set( Calendar.AM_PM, Calendar.AM );*/
 		
 		boolean currentlyAM = ( c.get(Calendar.AM_PM) == Calendar.AM );
 		c.roll( Calendar.HOUR , hourToAdjust);
@@ -305,8 +364,9 @@ public class MainActivity extends Activity {
 			halfDiffAngle_deg += 180;
 		}
 		
-		//Toast.makeText( getApplicationContext(),"Original CalculateMoonAngle angle is " + halfDiffAngle_deg_copy +
-		//		", moon phase adjustment = " + moonPhaseAdjustment_deg,Toast.LENGTH_LONG).show();
+		//Toast.makeText( getApplicationContext(),"Original CalculateMoonAngle angle is " + halfDiffAngle_deg_copy + "\n" +
+		//		", moon phase adjustment = " + moonPhaseAdjustment_deg + "\n" + 
+		//		" hoursToAdjust = " + hoursToAdjust,Toast.LENGTH_LONG).show();
 		
 		return halfDiffAngle_deg;
 	}
@@ -316,10 +376,12 @@ public class MainActivity extends Activity {
 	{
 		SharedPreferences prefs = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
 		if ( prefs.getBoolean(Pref_SunMode, true) ) {
-			canvasView.SetRotationAngle( CalculateSunAngle() );
+			canvasView.SetRotationAngle( CalculateSunAngle(), "" );
 			//canvasView.SetRotationAngle( 90 );
 		}
-		else {
+		else 
+		{
+			/*
 			Calendar c = Calendar.getInstance(); 
 			
 			float currHour = c.get(Calendar.HOUR) + ( (float)c.get(Calendar.MINUTE) / (float)60);
@@ -329,16 +391,11 @@ public class MainActivity extends Activity {
 				refHour = (float)1;
 			}
 			
-			//DEBUG
-			//refHour = 0;
-			//currHour = (float)4.5;
-			//offsetHour = 10;
+			Toast.makeText( getApplicationContext(),"Clock Hour (R)= " + currHour + ", Offset hour (B) = " + offsetHour 
+				+ ", Ref Hour (G) = "+refHour,Toast.LENGTH_LONG).show(); */
 			
-			//Toast.makeText( getApplicationContext(),"Clock Hour (R)= " + currHour + ", Offset hour (B) = " + offsetHour 
-			//	+ ", Ref Hour (G) = "+refHour,Toast.LENGTH_LONG).show();
-			
+			canvasView.SetRotationAngle( CalculateMoonAngle(), GetMoonPhaseString() );
 			//canvasView.SetClockFace( currHour, offsetHour, refHour );
-			canvasView.SetRotationAngle( CalculateMoonAngle() );
 		}
 	}
 	
@@ -367,10 +424,8 @@ public class MainActivity extends Activity {
 		else {
 			Sun_button.setBackgroundResource(R.drawable.moon);
 		}
-		
 	}
 
-	
 	//Function to get the user confirmation the limitations
 	//from: http://www.androidhub4you.com/2012/09/alert-dialog-box-or-confirmation-box-in.html
 	public void validUseConfirmation() {
@@ -401,12 +456,43 @@ public class MainActivity extends Activity {
         	.setPositiveButton(R.string.validUse_accept, dialogClickListener).show();
 	}
 	
+	//Function to display the instructions
+	//from: http://www.androidhub4you.com/2012/09/alert-dialog-box-or-confirmation-box-in.html
+	public void instructionsDialog(boolean forceFlag) {
+		
+		SharedPreferences prefs = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
+		if ( !forceFlag && prefs.getBoolean(Pref_InstructionsRead, false) ) {
+			validUseConfirmation();
+			return;
+		}
+		
+        DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+               public void onClick(DialogInterface dialog, int which) {
+                     switch (which) {
+                     case DialogInterface.BUTTON_POSITIVE:
+                            // OK button clicked
+	                    	SharedPreferences prefs = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
+	                 		Editor editor = prefs.edit();
+	                 		editor.putBoolean(Pref_InstructionsRead, true );
+	                 		editor.commit();
+	                 		
+	                 		validUseConfirmation();
+                            break;
+                     }
+               }
+        };
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(R.string.instructions_text)
+        	.setPositiveButton(R.string.validUse_accept, dialogClickListener).show();
+	}
+	
 	//Function to update the arrow position over time
 	//From: https://web.archive.org/web/20100126090836/http://developer.android.com/intl/zh-TW/resources/articles/timed-ui-updates.html
 	private Runnable updateArrowTask = new Runnable() {
 	   public void run() {
 		   DrawCorrectNorthArrow();
-		   Toast.makeText( getApplicationContext(),"updateArrowTask fired at" ,Toast.LENGTH_LONG).show();
+		   //Toast.makeText( getApplicationContext(),"updateArrowTask fired at" ,Toast.LENGTH_LONG).show();
 	     
 		   handler.postDelayed(this, updateRate_min*60*1000);
 	   }
