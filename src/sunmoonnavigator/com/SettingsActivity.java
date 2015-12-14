@@ -52,7 +52,7 @@ public class SettingsActivity extends Activity {
 				//Update the displayed text
 				UpdateButtonText();
 				
-				Toast.makeText(getApplicationContext(),"North hemi = "+northHemi,Toast.LENGTH_LONG).show();
+				//Toast.makeText(getApplicationContext(),"North hemi = "+northHemi,Toast.LENGTH_LONG).show();
 			}
 		}); //End of NorthSouthHemi_button setOnClickListener
 		

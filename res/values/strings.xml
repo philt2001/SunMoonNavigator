@@ -13,6 +13,7 @@
     <string name="settings_title">Settings</string>
     <string name="instructions_view">Instructions</string>
     <string name="instructions_text">Point the top of the phone at either the sun or moon and the arrow will point North.\n\nSelect either sun/moon mode by clicking on the icon.\n\nBe sure to select the correct hemisphere.</string>
+    <string name="disclaimer_text"><b>Disclaimer:</b>\nThis app should not be relied upon for navigation, for the obvious reason that without the sun or moon being visible, it doesn’t work.\nThe accuracy degrades as you move closer to the equator.\nIt is for indication only!</string>
     
     <string name="moonPhase_new">New</string>
     <string name="moonPhase_waxingC">Waxing Crescet</string>

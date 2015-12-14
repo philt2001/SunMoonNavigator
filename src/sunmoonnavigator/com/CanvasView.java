@@ -6,6 +6,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
@@ -23,6 +24,7 @@ public class CanvasView extends View {
 	float refHour;
 	float hoursPerRotation;
 	String displayText;  
+	Rect bounds;
 	 
 	public CanvasView(Context context) {
 	 super(context);
@@ -49,6 +51,8 @@ public class CanvasView extends View {
 		offsetHour = 0;
 		refHour = 0;
 		hoursPerRotation = 12;
+		
+		bounds = new Rect();
 	}
 	
 	//This is the angle that the arrow should be rotated clockwise from facing the top of the phone
@@ -153,7 +157,6 @@ public class CanvasView extends View {
 		 if ( this.clockMode )
 		 {
 			 drawClock(canvas);
-			 //return;
 		 }
 		 
 		 int width = canvas.getWidth();
@@ -161,6 +164,8 @@ public class CanvasView extends View {
 		 int radius = (int) ((double)(width/2) * 0.9);
 		 int halfWidth = width/2;
 		 int halfHeight = height/2;
+		 int centreWidth = halfWidth;
+		 int centreHeight = halfHeight + (int) ((double)(width/2) * 0.1);
 		 
 		 //Clear the path (last arrow)
 		 path.reset();
@@ -170,11 +175,7 @@ public class CanvasView extends View {
 		 paint.setStyle(Paint.Style.STROKE);
 		 
 		 paint.setStyle(Paint.Style.STROKE);
-		 canvas.drawCircle(width/2, height/2, radius, paint);
-		 
-		 //paint.setStyle(Paint.Style.FILL);
-		 //canvas.drawCircle(300, 300, 200, paint);
-		 //drawCircle(cx, cy, radius, paint)
+		 canvas.drawCircle(centreWidth, centreHeight, radius, paint);
 		 
 		 //Offsets from centre, x-coordinates ready
 		 //y-coordinates ready to be scaled by the radius
@@ -195,10 +196,10 @@ public class CanvasView extends View {
 		 RotateAndScaleMatrix( arrowPath, rotateMatrix, radius );
 		 
 		 //Draw the arrow
-		 path.moveTo( halfWidth + arrowPath[0][0], halfHeight + arrowPath[0][1] );
+		 path.moveTo( centreWidth + arrowPath[0][0], centreHeight + arrowPath[0][1] );
 		 for (int idx = 1; idx < arrowPath.length; idx++)
 		 {
-			 path.lineTo( halfWidth + arrowPath[idx][0], halfHeight + arrowPath[idx][1] );
+			 path.lineTo( centreWidth + arrowPath[idx][0], centreHeight + arrowPath[idx][1] );
 		 }
 		 path.close();
 		 
@@ -209,7 +210,10 @@ public class CanvasView extends View {
 		 paint.setColor(Color.BLACK);
 		 paint.setTextSize(25);
 		 paint.setStrokeWidth(0); //need to turn this off, otherwise it covers the text
-		 canvas.drawText( displayText, 0, 25, paint);
+		 
+		 //Get the text size to position it centrally
+		 paint.getTextBounds(displayText,0,displayText.length(),bounds);		 
+		 canvas.drawText( displayText, halfWidth-(bounds.width()/2), 25, paint);
 	 
 	}
 }

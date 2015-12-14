@@ -282,33 +282,6 @@ public class MainActivity extends Activity {
 		
 	}
 	
-	//Function to get the angle for the current moon phase and time
-	private float ConvertTimeAndMoonPhaseToRelativeAngleToReference()
-	{
-		float hoursToAdjust = ConvertMoonPhaseToFractionalHours();
-		
-		//Apply the time offset to the current time - converting to hours and minutes
-		int hourToAdjust = (int)hoursToAdjust;
-		int minuteToAdjust = (int)Math.floor( (hoursToAdjust-hourToAdjust) * MINUTES_PER_HOUR );
-		
-		//Toast.makeText( getApplicationContext(),"Fraction of moon phase = " + fractionOfMoonPhase + ", hours to adjust = " + hoursToAdjust 
-		//		+ "offset in h:m = "+hourToAdjust + ":"+minuteToAdjust,Toast.LENGTH_LONG).show();
-		
-		Calendar c = Calendar.getInstance();
-		
-		boolean currentlyAM = ( c.get(Calendar.AM_PM) == Calendar.AM );
-		c.roll( Calendar.HOUR , hourToAdjust);
-		c.roll( Calendar.MINUTE , minuteToAdjust);
-		
-		int hour = c.get(Calendar.HOUR);
-		int minutes = c.get(Calendar.MINUTE);
-		//boolean currentlyAM = ( c.get(Calendar.AM_PM) == Calendar.AM );
-		
-		//Toast.makeText( getApplicationContext(),"Calculation time is " + hour + ":" + minutes+" "+"(AM:"+currentlyAM+") and hours to adjust = " + hoursToAdjust ,Toast.LENGTH_LONG).show();
-		
-		return ConvertTimeToRelativeAngleToReference(hour, minutes, currentlyAM);
-	}
-	
 	//Function to calculate the angle for the sun mode
 	//Methods from: http://www.wikihow.com/Find-True-North-Without-a-Compass
 	//and: https://www.quora.com/How-can-you-navigate-using-the-Moon-as-a-guide
@@ -340,21 +313,12 @@ public class MainActivity extends Activity {
 		
 		//Do the ordinary time calculation
 		float halfDiffAngle_deg = ConvertTimeToRelativeAngleToReference() / 2;
-		float halfDiffAngle_deg_copy = halfDiffAngle_deg;
 		
 		//Apply the moon phase offset
 		float hoursToAdjust = ConvertMoonPhaseToFractionalHours();
 		float moonPhaseAdjustment_deg = hoursToAdjust * degreesPerHour;
 		
 		halfDiffAngle_deg += moonPhaseAdjustment_deg;
-		
-		//float halfDiffAngle_deg = ConvertTimeAndMoonPhaseToRelativeAngleToReference() / 2;
-		//Toast.makeText( getApplicationContext(),"halfDiffAngle " + halfDiffAngle_deg,Toast.LENGTH_LONG).show();
-		
-		//float phoneOrintationOffset = ConvertTimeToRelativeAngleToReference();
-		//float phoneOrintationOffset = ConvertMoonPhaseToFractionalHours() * degreesPerHour;
-		
-		//halfDiffAngle_deg += phoneOrintationOffset;
 		
 		//Currently finding the angle between the reference and the hour hand
 		//If in the north, then this is south
@@ -363,10 +327,6 @@ public class MainActivity extends Activity {
 		{
 			halfDiffAngle_deg += 180;
 		}
-		
-		//Toast.makeText( getApplicationContext(),"Original CalculateMoonAngle angle is " + halfDiffAngle_deg_copy + "\n" +
-		//		", moon phase adjustment = " + moonPhaseAdjustment_deg + "\n" + 
-		//		" hoursToAdjust = " + hoursToAdjust,Toast.LENGTH_LONG).show();
 		
 		return halfDiffAngle_deg;
 	}
